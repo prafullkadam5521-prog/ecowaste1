@@ -34,6 +34,16 @@ function isRateLimited(ip) {
   return false;
 }
 
+// Clean up stale entries every 5 minutes to prevent memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, timestamps] of requestLog) {
+    const valid = timestamps.filter(t => now - t < 60_000);
+    if (valid.length === 0) requestLog.delete(ip);
+    else requestLog.set(ip, valid);
+  }
+}, 5 * 60 * 1000);
+
 // ── Route ─────────────────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.ip || 'unknown';
