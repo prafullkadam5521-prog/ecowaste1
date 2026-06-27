@@ -1,16 +1,36 @@
 import { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 import Loader from '../components/common/Loader';
-import { FiWifi, FiActivity, FiAlertTriangle } from 'react-icons/fi';
+import { FiWifi, FiActivity, FiAlertTriangle, FiMapPin } from 'react-icons/fi';
 import { MdDeleteOutline } from 'react-icons/md';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 // ── Status config ─────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  EMPTY:  { color: 'text-green-600',  bg: 'bg-green-100',  border: 'border-green-300',  bar: 'from-green-400 to-green-500',    glow: 'shadow-green-200/60',  label: 'Empty' },
-  LOW:    { color: 'text-lime-600',   bg: 'bg-lime-100',   border: 'border-lime-300',   bar: 'from-lime-400 to-lime-500',      glow: 'shadow-lime-200/60',   label: 'Low' },
-  MEDIUM: { color: 'text-orange-600', bg: 'bg-orange-100', border: 'border-orange-300', bar: 'from-orange-400 to-orange-500',  glow: 'shadow-orange-200/60', label: 'Medium' },
-  FULL:   { color: 'text-red-600',    bg: 'bg-red-100',    border: 'border-red-300',    bar: 'from-red-500 to-red-600',        glow: 'shadow-red-300/60',    label: 'Full' },
+  EMPTY:  { color: 'text-green-600',  bg: 'bg-green-100',  border: 'border-green-300',  bar: 'from-green-400 to-green-500',    glow: 'shadow-green-200/60',  label: 'Empty',  hex: '#22c55e' },
+  LOW:    { color: 'text-lime-600',   bg: 'bg-lime-100',   border: 'border-lime-300',   bar: 'from-lime-400 to-lime-500',      glow: 'shadow-lime-200/60',   label: 'Low',    hex: '#84cc16' },
+  MEDIUM: { color: 'text-orange-600', bg: 'bg-orange-100', border: 'border-orange-300', bar: 'from-orange-400 to-orange-500',  glow: 'shadow-orange-200/60', label: 'Medium', hex: '#f97316' },
+  FULL:   { color: 'text-red-600',    bg: 'bg-red-100',    border: 'border-red-300',    bar: 'from-red-500 to-red-600',        glow: 'shadow-red-300/60',    label: 'Full',   hex: '#ef4444' },
 };
+
+// ── Map marker icons (color-coded by status) ──────────────────────────────
+const PUNE_CENTER = [18.5204, 73.8567];
+
+function makeIcon(hexColor) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
+    <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="${hexColor}"/>
+    <circle cx="14" cy="14" r="6" fill="white"/>
+  </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: '',
+    iconSize: [28, 40],
+    iconAnchor: [14, 40],
+    popupAnchor: [0, -36],
+  });
+}
 
 // ── Relative time helper ──────────────────────────────────────────────────
 function timeAgo(dateStr) {
@@ -51,7 +71,7 @@ function DustbinCard({ bin }) {
           </div>
           <div>
             <h3 className="font-bold text-gray-800 text-sm">{bin.dustbinId}</h3>
-            <span className={`text-xs font-medium ${s.color}`}>Smart Bin</span>
+            <span className={`text-xs font-medium ${s.color}`}>{bin.label || 'Smart Bin'}</span>
           </div>
         </div>
 
@@ -223,6 +243,41 @@ export default function SmartDustbin() {
           <MdDeleteOutline size={48} className="mx-auto mb-3 opacity-30" />
           <p className="text-lg font-medium text-gray-500 mb-1">No Dustbins Online</p>
           <p className="text-sm">Waiting for ESP32 to send data to <code className="bg-gray-100 px-2 py-0.5 rounded text-xs font-mono">POST /api/dustbin/update</code></p>
+        </div>
+      )}
+
+      {/* Dustbin Map */}
+      {totalBins > 0 && dustbins.some(b => b.location?.coordinates?.[0]) && (
+        <div className="mb-8">
+          <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <FiMapPin size={18} className="text-primary" /> Dustbin Locations
+          </h2>
+          <div className="card p-0 overflow-hidden rounded-xl border border-gray-200" style={{ height: '400px' }}>
+            <MapContainer center={PUNE_CENTER} zoom={12} className="h-full w-full" scrollWheelZoom={true}>
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; OpenStreetMap'
+              />
+              {dustbins.filter(b => b.location?.coordinates?.[0]).map(bin => {
+                const st = STATUS_CONFIG[bin.status] || STATUS_CONFIG.EMPTY;
+                return (
+                  <Marker
+                    key={bin.dustbinId}
+                    position={[bin.location.coordinates[1], bin.location.coordinates[0]]}
+                    icon={makeIcon(st.hex)}
+                  >
+                    <Popup>
+                      <div className="text-sm">
+                        <p className="font-bold">{bin.dustbinId}</p>
+                        {bin.label && <p className="text-gray-500">{bin.label}</p>}
+                        <p>Fill: <b>{bin.fillLevel.toFixed(1)}%</b> — <span style={{ color: st.hex }}>{st.label}</span></p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+            </MapContainer>
+          </div>
         </div>
       )}
 

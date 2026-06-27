@@ -2,9 +2,14 @@ const mongoose = require('mongoose');
 
 const dustbinSchema = new mongoose.Schema({
   dustbinId: { type: String, required: true, unique: true, trim: true },
+  label:     { type: String, default: '' },
   distance:  { type: Number, default: 0 },
   fillLevel: { type: Number, default: 0, min: 0, max: 100 },
   status:    { type: String, enum: ['EMPTY', 'LOW', 'MEDIUM', 'FULL'], default: 'EMPTY' },
+  location: {
+    type:        { type: String, enum: ['Point'], default: 'Point' },
+    coordinates: { type: [Number], default: [0, 0] },  // [lng, lat]
+  },
   updatedAt: { type: Date, default: Date.now },
 });
 
