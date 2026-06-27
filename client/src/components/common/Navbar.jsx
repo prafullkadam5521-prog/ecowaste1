@@ -41,9 +41,11 @@ export default function Navbar() {
           <Link to="/facilities" className="text-gray-600 hover:text-primary transition-colors">
             Find Facilities
           </Link>
-          <Link to="/smart-dustbin" className="text-gray-600 hover:text-primary transition-colors flex items-center gap-1">
-            <FiTrash2 size={14} /> Smart Dustbin
-          </Link>
+          {user?.role === 'admin' && (
+            <Link to="/smart-dustbin" className="text-gray-600 hover:text-primary transition-colors flex items-center gap-1">
+              <FiTrash2 size={14} /> Smart Dustbin
+            </Link>
+          )}
           {user && user.role === 'user' && (
             <>
               <Link to="/my-requests" className="text-gray-600 hover:text-primary transition-colors flex items-center gap-1">
@@ -96,9 +98,11 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 py-3 flex flex-col gap-3 text-sm">
           <Link to="/facilities"  onClick={() => setOpen(false)} className="text-gray-700">Find Facilities</Link>
-          <Link to="/smart-dustbin" onClick={() => setOpen(false)} className="flex items-center gap-2 text-gray-700">
-            <FiTrash2 size={14} /> Smart Dustbin
-          </Link>
+          {user?.role === 'admin' && (
+            <Link to="/smart-dustbin" onClick={() => setOpen(false)} className="flex items-center gap-2 text-gray-700">
+              <FiTrash2 size={14} /> Smart Dustbin
+            </Link>
+          )}
           {user && user.role === 'user' && (
             <>
               <Link to="/my-requests" onClick={() => setOpen(false)} className="text-gray-700">My Requests</Link>

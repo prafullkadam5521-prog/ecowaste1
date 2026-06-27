@@ -46,7 +46,7 @@ const AppRoutes = () => (
         <Route path="/login"          element={<Login />} />
         <Route path="/register"       element={<Register />} />
         <Route path="/facilities"     element={<Facilities />} />
-        <Route path="/smart-dustbin"  element={<SmartDustbin />} />
+        <Route path="/smart-dustbin"  element={<AdminRoute><SmartDustbin /></AdminRoute>} />
         <Route path="/facilities/:id" element={<FacilityDetail />} />
 
         <Route path="/request/:facilityId" element={<PrivateRoute><RequestService /></PrivateRoute>} />
